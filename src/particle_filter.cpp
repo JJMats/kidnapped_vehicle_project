@@ -39,6 +39,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   normal_distribution<double> dist_y(y, std[1]);
   normal_distribution<double> dist_theta(theta, std[2]);
   
+  // Create particles from normal distributions, with weights initialized to 1.0
   for(int i=0; i < num_particles; ++i){    
     Particle p = {
       id: i,
@@ -72,8 +73,11 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       yaw_rate = -0.00001;
     }
   }
+  
+  // Pre-calculate turn_radius for state calculation
   double turn_radius = velocity / yaw_rate;
   
+  // Calculate new state for each particle  
   for (unsigned int i=0; i < particles.size(); ++i){
     double new_x = particles[i].x + turn_radius * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
     double new_y = particles[i].y + turn_radius * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
@@ -211,39 +215,32 @@ void ParticleFilter::resample() {
   
   // Update the particles to the Baysian posterior distribution
   // Implement Resampling Wheel
-  vector<Particle> new_particles;
-  
+  vector<Particle> new_particles;    
   vector<double> particle_weights;
   for(int i=0; i < num_particles; ++i){
     particle_weights.push_back(particles[i].weight);
-  }
-  
-  // Set beta
-  double beta = 0.0;  
-  
-  //std::cout << "Setting maximum weight..." << std::endl;
+  }  
+
   // Get the maximum weight of the particle_weights vector
   double maximum_weight = *max_element(particle_weights.begin(), particle_weights.end());
-  //std::cout << "Maximum weight: " << maximum_weight << std::endl;
   
-  std::uniform_real_distribution<double> unirealdist(0.0, maximum_weight);  
+  // Instantiate a uniform real distribution to sample weights from
+  std::uniform_real_distribution<double> ur_dist(0.0, maximum_weight * 2.0);  
   
   // Randomly select an index to start from on the resampling wheel
   int index = rand() % num_particles;
-  //std::cout << "Index: " << index << std::endl;
   
   // Loop through resampling wheel to generate a vector of new particles
+  double beta = 0.0;
   for(int i=0; i < num_particles; ++i){
-    beta += unirealdist(gen) * 2.0;
-    //beta += double(rand() % num_particles) * 2.0 * maximum_weight;
-    //std::cout << "Beta: " << beta << ", i: " << i << ", weight: " << particle_weights[index] << ", weights length: " << particle_weights.size() << std::endl;    
+    beta += ur_dist(gen);
     while (beta > particle_weights[index]){
       beta -= particle_weights[index];
-      index = (1 + index) % num_particles;      
+      index = (index + 1) % num_particles;      
     }
     new_particles.push_back(particles[index]);
   }
-  
+
   particles = new_particles;
 }
 
