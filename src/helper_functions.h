@@ -58,18 +58,6 @@ inline double dist(double x1, double y1, double x2, double y2) {
   return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-inline double update_x(double x, double turn_radius, double theta_init, double yaw_rate, double dt){
-  return x + turn_radius * (sin(theta + yaw_rate * dt) - sin(theta));
-}
-
-inline double update_y(double y, double turn_radius, double theta_init, double yaw_rate, double dt){
-  return y + turn_radius * (cos(theta) - cos(theta + yaw_rate * dt));
-}
-
-inline double update_theta(double theta_init, double yaw_rate, double dt){
-  return theta_init + yaw_rate * dt;
-}
-
 /**
  * Computes the error between ground truth and particle filter data.
  * @param (gt_x, gt_y, gt_theta) x, y and theta of ground truth
